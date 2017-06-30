@@ -99,7 +99,7 @@ class Follower(Base):
     follower = relationship('User', foreign_keys=[follower_id], backref='following')
     followed_id = Column(ForeignKey('users.id'), index=True)
     followed = relationship('User', foreign_keys=[followed_id], backref='followers')
-    datetime = Column(DateTime)
+    datetime = Column(DateTime, nullable=True)
 
     PrimaryKeyConstraint(follower_id, followed_id)
 

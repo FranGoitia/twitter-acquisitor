@@ -1,6 +1,4 @@
-import time
-from contextlib import suppress
-from tweepy import API, AppAuthHandler, Cursor, RateLimitError
+from tweepy import API, AppAuthHandler, Cursor
 from geonamescache import GeonamesCache
 
 from model import (User, Follower, Keyword, Tweet, Search, Country, City,
@@ -58,11 +56,14 @@ class Acquisitor:
         """
         user = self.api.get_user(user_handle)
         followed = self._get_or_create_user(user, user.__dict__.get('status'))
+        i = 0
         for follower in Cursor(self.api.followers, id=user_handle).items():
+            i += 1
             f = self._get_or_create_user(follower, follower.__dict__.get('status'))
-            relationship = Follower(follower=f, followed=followed)
-            self.session.add(relationship)
-            self.session.commit()
+            relationship = self.session.query(Follower).filter_by(followed=followed, follower=f).first()
+            if not relationship:
+                self.session.add(Follower(follower=f, followed=followed))
+                self.session.commit()
 
     def _get_or_create_user(self, user, status):
         u = self.session.query(User).filter_by(handle=user.screen_name).first()
@@ -134,5 +135,5 @@ class Acquisitor:
 
 if __name__ == '__main__':
     acquisitor = Acquisitor(CONSUMER_KEY, CONSUMER_SECRET, TWITTER_HANDLE, create_session())
-    acquisitor.register_followers('FraudeMundial14')
+    acquisitor.register_followers('chanchavia')  # burningman
     # acquisitor.register_the_search('#grandt', 'es')
